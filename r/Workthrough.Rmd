@@ -1,0 +1,46 @@
+---
+title: "Network analytics"
+output:
+  html_document:
+    self_contined: yes
+    code_folding: show
+    highlight: pygment
+    number_sections: yes
+    theme: journal
+    toc: yes
+    toc_depth: 3
+    toc_float: true
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  word_document:
+    reference_docx: styles/word_template.docx
+    toc: yes
+    toc_depth: '3'
+---
+
+
+```{r}
+library(dplyr)
+library(purrr)
+library(RNeo4j)
+library(ggplot2)
+library(lubridate)
+
+links <- scan('neo4jpw.txt', what = "character")
+
+ec_graph <- RNeo4j::startGraph("http://localhost:9001/db/data", 
+                               username = links[1], 
+                               password = links[2])
+```
+
+## Possible Award Matches
+
+Looking for all awards within the graph with common titles, awarded in the same year.  
+
+```{r}
+clist <- cypher(ec_graph, "MATCH (n1:Award)-[:Year_Started]-(ys:Year)-[:Year_Started]-(n:Award)
+  WHERE n.AwardTitle = n1.AwardTitle AND n1.AwardID <> n.AwardID
+RETURN n.AwardID AS source, n1.AwardID AS target, ys.Year AS year, n.AwardTitle AS awardtitle ORDER BY year")
+```
+
